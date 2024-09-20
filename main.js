@@ -29,12 +29,11 @@ app.use(express.static(path.join(__dirname, "public"))); //To serve static files
 app.use(express.static(path.join(__dirname, "dist")));
 //remote:
 // app.use(express.static(path.join(__dirname, '../assignment-3-3-basic/dist')));
-app.get("/",function(req,res)
-{ 
+app.get("/", function (req, res) {
   //remote: 
   // res.sendFile(path.join(__dirname, '../assignment-3-3-basic/dist/index.html'));
   //local:
-  res.sendFile(__dirname+"/index.html");
+  res.sendFile(__dirname + "/index.html");
 
 });
 
@@ -49,7 +48,7 @@ const corsConfig = {
 app.use(cors(corsConfig));
 app.options("*", cors(corsConfig));
 
-var port = process.env.PORT || "80"; //local=3000 remote=80
+var port = process.env.PORT || "3000"; //local=3000 remote=80
 //#endregion
 const user = require("./routes/user");
 const recipes = require("./routes/recipes");
@@ -79,7 +78,7 @@ app.get("/alive", (req, res) => res.send("I'm alive"));
 // Routings
 app.use("/users", user);
 app.use("/recipes", recipes);
-app.use(auth);
+app.use("/auth", auth);
 
 // Default router
 app.use(function (err, req, res, next) {

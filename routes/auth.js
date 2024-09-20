@@ -4,42 +4,47 @@ const MySql = require("../routes/utils/MySql");
 const DButils = require("../routes/utils/DButils");
 const bcrypt = require("bcrypt");
 
-router.post("/Register", async (req, res, next) => {
+router.post("/register", async (req, res, next) => {
+  const connection = await MySql.connection();
   try {
-    // parameters exists
-    // valid parameters
-    // username exists
-    let user_details = {
-      username: req.body.username,
-      firstname: req.body.firstname,
-      lastname: req.body.lastname,
-      country: req.body.country,
-      password: req.body.password,
-      email: req.body.email,
-      profilePic: req.body.profilePic
+    const { username, firstname, lastname, country, password, email, profilePic } = req.body;
+
+    // Check if all required fields are provided
+    if (!username || !firstname || !lastname || !country || !password || !email) {
+      throw { status: 400, message: "All fields are required." };
     }
-    let users = [];
-    users = await DButils.execQuery("SELECT username from users");
 
-    if (users.find((x) => x.username === user_details.username))
+    // Check for existing username
+    let users = await DButils.execQuery("SELECT username FROM users");
+    if (users.find((x) => x.username === username)) {
       throw { status: 409, message: "Username taken" };
+    }
 
-    // add the new username
-    let hash_password = bcrypt.hashSync(
-      user_details.password,
-      parseInt(process.env.bcrypt_saltRounds)
+    // Hash password
+    let hash_password = bcrypt.hashSync(password, parseInt(process.env.bcrypt_saltRounds));
+
+    // Insert new user
+    console.log("Inserting user with data:", [username, firstname, lastname, country, hash_password, email]);
+    await connection.query(
+      `INSERT INTO users (username, firstname, lastname, country, password, email) VALUES (?, ?, ?, ?, ?, ?)`,
+      [username, firstname, lastname, country, hash_password, email]
     );
-    await DButils.execQuery(
-      `INSERT INTO users VALUES ('${user_details.username}', '${user_details.firstname}', '${user_details.lastname}',
-      '${user_details.country}', '${hash_password}', '${user_details.email}')`
-    );
-    res.status(201).send({ message: "user created", success: true });
+
+    // Commit the transaction
+    await connection.query("COMMIT");
+    console.log("User inserted successfully");
+
+    res.status(201).send({ message: "User created", success: true });
   } catch (error) {
+    await connection.query("ROLLBACK");
+    console.error("Error during registration:", error); // Log the error
     next(error);
+  } finally {
+    await connection.release();
   }
 });
 
-router.post("/Login", async (req, res, next) => {
+router.post("/login", async (req, res, next) => {
   try {
     // check that username exists
     const users = await DButils.execQuery("SELECT username FROM users");
@@ -60,7 +65,6 @@ router.post("/Login", async (req, res, next) => {
     // Set cookie
     req.session.user_id = user.user_id;
 
-
     // return cookie
     res.status(200).send({ message: "login succeeded", success: true });
   } catch (error) {
@@ -68,8 +72,8 @@ router.post("/Login", async (req, res, next) => {
   }
 });
 
-router.post("/Logout", function (req, res) {
-  req.session.reset(); // reset the session info --> send cookie when  req.session == undefined!!
+router.post("/logout", function (req, res) {
+  req.session.reset(); // reset the session info --> send cookie when req.session == undefined!!
   res.send({ success: true, message: "logout succeeded" });
 });
 
