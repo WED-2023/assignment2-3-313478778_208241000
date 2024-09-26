@@ -67,9 +67,9 @@ router.post('/addRecipe', async (req, res, next) => {
       is_private
     } = req.body; // Extract recipe details from the request body
 
-    // Join the ingredients and instructions arrays into a string
-    const instructionsText = instructions.join("\n");  // Join instructions with newline characters
-    const ingredientsText = ingredients.join(", ");    // Join ingredients with a comma separator
+    // Join the ingredients and instructions arrays or split strings into arrays if needed
+    const instructionsText = Array.isArray(instructions) ? instructions.join("\n") : instructions.split(',').join("\n");
+    const ingredientsText = Array.isArray(ingredients) ? ingredients.join(", ") : ingredients.split(',').join(", ");
 
     // Check that all required fields are provided
     if (!recipe_name || !instructionsText || !ingredientsText || !image_url) {
@@ -89,6 +89,7 @@ router.post('/addRecipe', async (req, res, next) => {
     next(error);
   }
 });
+
 
 
 
