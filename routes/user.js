@@ -39,7 +39,7 @@ router.post('/favorites/add', async (req, res, next) => {
 /**
  * This path removes a recipe from the user's favorites list.
  */
-router.post('/favorites/remove', async (req, res, next) => {
+router.delete('/favorites/remove', async (req, res, next) => {
   try {
     const user_id = req.session.user_id;
     const recipe_id = req.body.recipeId;

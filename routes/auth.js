@@ -7,10 +7,10 @@ const bcrypt = require("bcrypt");
 router.post("/register", async (req, res, next) => {
   const connection = await MySql.connection();
   try {
-    const { username, firstname, lastname, country, password, email, profilePic } = req.body;
+    const { username, firstname, lastname, email, country, password } = req.body;
 
     // Check if all required fields are provided
-    if (!username || !firstname || !lastname || !country || !password || !email) {
+    if (!username || !firstname || !lastname || !email || !country || !password) {
       throw { status: 400, message: "All fields are required." };
     }
 
@@ -24,10 +24,10 @@ router.post("/register", async (req, res, next) => {
     let hash_password = bcrypt.hashSync(password, parseInt(process.env.bcrypt_saltRounds));
 
     // Insert new user
-    console.log("Inserting user with data:", [username, firstname, lastname, country, hash_password, email]);
+    console.log("Inserting user with data:", [username, firstname, lastname, email, country, hash_password]);
     await connection.query(
       `INSERT INTO users (username, firstname, lastname, country, password, email) VALUES (?, ?, ?, ?, ?, ?)`,
-      [username, firstname, lastname, country, hash_password, email]
+      [username, firstname, lastname, email, country, hash_password]
     );
 
     // Commit the transaction

@@ -48,7 +48,7 @@ async function unMarkAsFavorite(user_id, recipe_id) {
 async function getFavoriteRecipes(user_id) {
     try {
         const recipes_id = await DButils.execQuery(
-            `SELECT recipe_id FROM FavoriteRecipes WHERE user_id = ?`,
+            `SELECT recipe_id FROM favorites WHERE user_id = ?`,
             [user_id]
         );
         return recipes_id;
