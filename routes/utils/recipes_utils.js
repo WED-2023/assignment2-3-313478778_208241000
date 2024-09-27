@@ -1,6 +1,7 @@
+require('dotenv').config();
 const axios = require("axios");
 const api_domain = "https://api.spoonacular.com/recipes";
-
+const apiKey = process.env.apiKey;
 
 
 /**
@@ -13,7 +14,7 @@ async function getRecipeInformation(recipe_id) {
     return await axios.get(`${api_domain}/${recipe_id}/information`, {
         params: {
             includeNutrition: false,
-            apiKey: process.env.spooncular_apiKey
+            apiKey: apiKey
         }
     });
 }
@@ -37,24 +38,42 @@ async function getRecipeDetails(recipe_id) {
     }
 }
 
-async function searchRecipe(recipeName, cuisine, diet, intolerance, number, username) {
-    const response = await axios.get(`${api_domain}/complexSearch`, {
+async function searchRecipe(recipeName, cuisine, diet, intolerance, number) {
+    try {
+        const cleanNumber = parseInt(
+            (typeof number === 'string' ? number.trim() : number || '5'),
+            10
+        );
+      const response = await axios.get(`${api_domain}/complexSearch`, {
         params: {
-            query: recipeName,
-            cuisine: cuisine,
-            diet: diet,
-            intolerances: intolerance,
-            number: number,
-            apiKey: process.env.spooncular_apiKey
+            query: recipeName.trim(),
+            cuisine: cuisine ? cuisine.trim() : undefined,
+            diet: diet ? diet.trim() : undefined,
+            intolerances: intolerance ? intolerance.trim() : undefined,
+            number: cleanNumber,
+            apiKey: apiKey.trim()
         }
-    });
-
-    return getRecipesPreview(response.data.results.map((element) => element.id), username);
+      });
+      
+      if (response.data.results.length === 0) {
+        return { message: 'No recipes were found for the given search criteria.' };
+        }
+        
+        const recipeIds = response.data.results.map((element) => element.id);
+        return await fetchRecipesDetailsByIds(recipeIds);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      throw new Error("Failed to fetch recipes from Spoonacular.");
+    }
+  }
+  
+  async function fetchRecipesDetailsByIds(recipeIds) {
+    return await Promise.all(recipeIds.map(id => getRecipeDetails(id)));
 }
 
 
 
 exports.getRecipeDetails = getRecipeDetails;
-
+exports.searchRecipe = searchRecipe;
 
 
