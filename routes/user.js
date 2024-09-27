@@ -73,6 +73,45 @@ router.get('/favorites/show', async (req, res, next) => {
   }
 });
 
+router.post('/addRecipe', async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id; // Get the logged-in user ID
+    const {
+      recipe_name,
+      cuisine,
+      diet,
+      instructions,
+      ingredients,
+      image_url,
+      prep_time,
+      cook_time,
+      is_private
+    } = req.body; // Extract recipe details from the request body
+
+    // Join the ingredients and instructions arrays or split strings into arrays if needed
+    const instructionsText = Array.isArray(instructions) ? instructions.join("\n") : instructions.split(',').join("\n");
+    const ingredientsText = Array.isArray(ingredients) ? ingredients.join(", ") : ingredients.split(',').join(", ");
+
+    // Check that all required fields are provided
+    if (!recipe_name || !instructionsText || !ingredientsText || !image_url) {
+      throw { status: 400, message: "Recipe name, instructions, ingredients, and image_url are required." };
+    }
+
+    // Insert the recipe into the user_recipes table
+    await DButils.execQuery(`
+      INSERT INTO user_recipes
+      (user_id, recipe_name, cuisine, diet, instructions, ingredients, image_url, prep_time, cook_time, is_private)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [user_id, recipe_name, cuisine, diet, instructionsText, ingredientsText, image_url, prep_time, cook_time, is_private]
+    );
+
+    res.status(201).send({ message: "Recipe added successfully", success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 
 
 
