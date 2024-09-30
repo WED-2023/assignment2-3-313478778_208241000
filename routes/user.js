@@ -2,7 +2,6 @@ var express = require("express");
 var router = express.Router();
 const DButils = require("./utils/DButils");
 const user_utils = require("./utils/user_utils");
-const recipe_utils = require("./utils/recipes_utils");
 
 /**
  * Authenticate all incoming requests by middleware
@@ -57,17 +56,17 @@ router.delete('/favorites/remove', async (req, res, next) => {
 
 
 /**
- * This path returns the favorites recipes that were saved by the logged-in user
+ * This path returns the favorite recipes that were saved by the logged-in user
  */
 router.get('/favorites/show', async (req, res, next) => {
   try {
     const user_id = req.session.user_id;
-    let favorite_recipes = {};
-    const recipes_id = await user_utils.getFavoriteRecipes(user_id);
-    let recipes_id_array = [];
-    recipes_id.map((element) => recipes_id_array.push(element.recipe_id)); //extracting the recipe ids into array
-    const results = await recipe_utils.getRecipesPreview(recipes_id_array);
-    res.status(200).send(results);
+
+    // Use the getAllFavoriteRecipes function to get detailed favorite recipes
+    const favoriteRecipes = await user_utils.getAllFavoriteRecipes(user_id);
+
+    // Send the detailed favorite recipes as a response
+    res.status(200).send(favoriteRecipes);
   } catch (error) {
     next(error);
   }

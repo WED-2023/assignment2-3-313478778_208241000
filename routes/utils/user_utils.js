@@ -1,4 +1,5 @@
 const DButils = require("./DButils");
+const { getRecipeInformation } = require('./recipes_utils');
 
 /**
  * Adds a recipe to the user's list of favorite recipes.
@@ -39,27 +40,37 @@ async function unMarkAsFavorite(user_id, recipe_id) {
 }
 
 /**
- * Retrieves the list of recipe IDs that have been marked as favorites by the user.
+ * Retrieves detailed information for all favorite recipes of the user.
  * 
  * @param {string} user_id - The unique identifier of the user.
- * @returns {Promise<Array>} A promise that resolves to an array of recipe IDs marked as favorite by the user.
- * @throws Will throw an error if the database operation fails.
+ * @returns {Promise<Array>} A promise that resolves to an array of detailed favorite recipes.
+ * @throws Will throw an error if the database operation fails or if fetching recipe information fails.
  */
-async function getFavoriteRecipes(user_id) {
+async function getAllFavoriteRecipes(user_id) {
     try {
-        const recipes_id = await DButils.execQuery(
+        // Step 1: Get favorite recipe IDs directly from the database
+        const fav_recipes_id = await DButils.execQuery(
             `SELECT recipe_id FROM favorites WHERE user_id = ?`,
             [user_id]
         );
-        return recipes_id;
+
+        // Step 2: Fetch detailed information for each favorite recipe
+        const recipeDetailsPromises = fav_recipes_id.map(async (recipe) => {
+            const recipe_id = recipe.recipe_id; // Access recipe_id from the retrieved favorites
+            const recipeDetails = await getRecipeInformation(recipe_id); // Fetch recipe information without user_id
+            return { ...recipeDetails, isFavorite: true }; // Add isFavorite property
+        });
+
+        // Step 3: Resolve all promises and return the results
+        return await Promise.all(recipeDetailsPromises);
     } catch (error) {
-        console.error("Error fetching favorite recipes:", error);
-        throw error;
+        console.error("Error fetching all favorite recipes:", error);
+        throw error; // Rethrow error for further handling
     }
 }
 
 module.exports = {
     markAsFavorite,
     unMarkAsFavorite,
-    getFavoriteRecipes,
+    getAllFavoriteRecipes, // Export the updated function
 };
