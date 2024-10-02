@@ -11,10 +11,22 @@ const apiKey = process.env.apiKey;
  */
 async function getRecipeDetails(recipe_id, full = false) {
     let recipe_info = await getRecipeInformation(recipe_id);
-    let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, ...rest } = recipe_info.data;
+    let {
+        id,
+        title,
+        readyInMinutes,
+        image,
+        aggregateLikes,
+        vegan,
+        vegetarian,
+        glutenFree,
+        extendedIngredients,
+        instructions,
+        analyzedInstructions
+    } = recipe_info.data;
 
     if (full) {
-        // Return full details
+        // Return only the relevant full details
         return {
             id: id,
             title: title,
@@ -24,7 +36,9 @@ async function getRecipeDetails(recipe_id, full = false) {
             vegan: vegan,
             vegetarian: vegetarian,
             glutenFree: glutenFree,
-            ...rest // Include all remaining properties for full details
+            extendedIngredients: extendedIngredients,
+            instructions: instructions,
+            analyzedInstructions: analyzedInstructions
         };
     } else {
         // Return preview details
@@ -41,6 +55,8 @@ async function getRecipeDetails(recipe_id, full = false) {
         };
     }
 }
+
+
 
 /**
  * Get recipes list from spoonacular response and extract relevant recipe data.
