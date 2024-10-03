@@ -9,15 +9,17 @@ router.get("/", (req, res) => res.send("im here"));
  */
 router.get("/search", async (req, res, next) => {
   try {
-    const recipeName = req.query.recipeName;
-    const cuisine = req.query.cuisine;
-    const diet = req.query.diet;
-    const intolerance = req.query.intolerance;
-    const number = req.query.number || 5;
-    const results = await recipes_utils.searchRecipe(recipeName, cuisine, diet, intolerance, number);
-    res.send(results);
+      const recipeName = req.query.recipeName;
+      const cuisine = req.query.cuisine;
+      const diet = req.query.diet;
+      const intolerance = req.query.intolerance;
+      const number = req.query.number || 5;
+      const full = req.query.full === 'true'; // Check if 'full' is true
+
+      const results = await recipes_utils.searchRecipe(recipeName, cuisine, diet, intolerance, number, full);
+      res.send(results);
   } catch (error) {
-    next(error);
+      next(error);
   }
 });
 

@@ -148,6 +148,3 @@ module.exports = {
     getRandomRecipes,
     getRecipeInformation,
 };
-
-
-
