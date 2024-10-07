@@ -137,7 +137,7 @@ router.get('/PrivateRecipes', async (req, res, next) => {
 
     // Fetch all recipes for the logged-in user
     const query = `
-      SELECT recipe_id AS id, image_url AS image, recipe_name AS title, prep_time AS readyInMinutes,
+      SELECT recipe_id, image_url AS image, recipe_name AS title, prep_time AS readyInMinutes,
              diet, instructions, ingredients
       FROM user_recipes
       WHERE user_id = ?`;
@@ -187,7 +187,7 @@ router.get('/PrivateRecipes/:recipe_id/view', async (req, res, next) => {
 
     // Fetch the recipe details from user_recipes table
     const query = `
-      SELECT recipe_id AS id, image_url AS image, recipe_name AS title, prep_time AS readyInMinutes,
+      SELECT recipe_id, image_url AS image, recipe_name AS title, prep_time AS readyInMinutes,
              numberOfDishes AS servings, diet, ingredients, instructions
       FROM user_recipes
       WHERE recipe_id = ? AND user_id = ?`;
