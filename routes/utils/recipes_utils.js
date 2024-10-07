@@ -78,7 +78,14 @@ async function searchRecipe(recipeName, cuisine, diet, intolerance, number, user
                 apiKey: process.env.SPOONACULAR_API_KEY // Use the correct environment variable name
             }
         });
-        return getRecipeInformation(response.data.results.map((element) => element.id), username);
+        
+        // Map over the array of IDs to fetch each recipe's information
+        const recipePromises = response.data.results.map((element) => getRecipeInformation(element.id));
+        
+        // Wait for all the promises to resolve
+        const recipes = await Promise.all(recipePromises);
+        
+        return recipes;
     } catch (error) {
         if (error.response && error.response.status === 402) {
             // Spoonacular API limit error
@@ -87,6 +94,7 @@ async function searchRecipe(recipeName, cuisine, diet, intolerance, number, user
         throw error;
     }
 }
+
 
 
 /**
