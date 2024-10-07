@@ -174,68 +174,49 @@ router.get('/PrivateRecipes', async (req, res, next) => {
   }
 });
 
+router.get('/PrivateRecipes/:recipe_id/view', async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
 
-// router.get('/PrivateRecipe/:recipe_id/preview', async (req, res, next) => {
-//   try {
-//     const user_id = req.session.user_id;
+    // Ensure user is authenticated
+    if (!user_id) {
+      return res.status(401).send({ message: "Unauthorized: Please log in to view your recipes." });
+    }
 
-//     // Ensure user is authenticated
-//     if (!user_id) {
-//       return res.status(401).send({ message: "Unauthorized: Please log in to view your recipes." });
-//     }
+    const recipe_id = req.params.recipe_id;
 
-//     const recipe_id = req.params.recipe_id;
-//     const query = `
-//       SELECT id, image_url AS image, recipe_name AS title, readyInMinutes,
-//              aggregateLikes, vegetarian, vegan, glutenFree, summary
-//       FROM user_recipes
-//       WHERE id = ? AND user_id = ?`;
-//     const recipe = await DButils.execQuery(query, [recipe_id, user_id]);
+    // Fetch the recipe details from user_recipes table
+    const query = `
+      SELECT recipe_id AS id, image_url AS image, recipe_name AS title, prep_time AS readyInMinutes,
+             numberOfDishes AS servings, diet, ingredients, instructions
+      FROM user_recipes
+      WHERE recipe_id = ? AND user_id = ?`;
+    const recipes = await DButils.execQuery(query, [recipe_id, user_id]);
 
-//     if (!recipe.length) {
-//       return res.status(404).send({ message: "Recipe not found or access denied." });
-//     }
+    if (!recipes.length) {
+      return res.status(404).send({ message: "Recipe not found or access denied." });
+    }
 
-//     res.status(200).send(recipe[0]);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+    // Extract the recipe details
+    const recipe = recipes[0];
 
+    // Parse ingredients and instructions
+    const parsedRecipe = {
+      ...recipe,
+      extendedIngredients: recipe.ingredients.split(',').map(ing => ({ original: ing.trim() })), // Parse ingredients string into an array of objects
+      _instructions: recipe.instructions.split(',').map(step => ({ step: step.trim() })), // Parse instructions string into an array of objects
+      diet: {
+        vegetarian: recipe.diet.includes('vegetarian'),
+        vegan: recipe.diet.includes('vegan'),
+        glutenFree: recipe.diet.includes('glutenFree')
+      },
+    };
 
-// router.get('/PrivateRecipe/:recipe_id/view', async (req, res, next) => {
-//   try {
-//     const user_id = req.session.user_id;
+    res.status(200).send(parsedRecipe);
+  } catch (error) {
+    next(error);
+  }
+});
 
-//     // Ensure user is authenticated
-//     if (!user_id) {
-//       return res.status(401).send({ message: "Unauthorized: Please log in to view your recipes." });
-//     }
-
-//     const recipe_id = req.params.recipe_id;
-//     const query = `
-//       SELECT id, image_url AS image, recipe_name AS title, readyInMinutes,
-//              servings, vegetarian, vegan, glutenFree, aggregateLikes, summary,
-//              ingredients, instructions
-//       FROM user_recipes
-//       WHERE id = ? AND user_id = ?`;
-//     const recipe = await DButils.execQuery(query, [recipe_id, user_id]);
-
-//     if (!recipe.length) {
-//       return res.status(404).send({ message: "Recipe not found or access denied." });
-//     }
-
-//     // Parse ingredients and instructions
-//     const parsedRecipe = {
-//       ...recipe[0],
-//       extendedIngredients: recipe[0].ingredients.split(',').map(ing => ({ original: ing.trim() })),
-//       _instructions: recipe[0].instructions.split(',').map(step => ({ step: step.trim() }))
-//     };
-
-//     res.status(200).send(parsedRecipe);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
 
 module.exports = router;
